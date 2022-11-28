@@ -2,12 +2,19 @@ import Head from "next/head";
 import Image from "next/image";
 import buildspaceLogo from "../assets/buildspace-logo.png";
 import { useState } from "react";
+import ReactDOM from "react-dom";
 
 const Home = () => {
+  const [conversationSubject, setConversationSubject] = useState("");
   const [userInput, setUserInput] = useState("");
-
+  const [userQuestion, setUserQuestion] = useState("");
   const [apiOutput, setApiOutput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [inputList, setInputList] = useState("");
+
+  const beginConversation = () => {
+    setConversationSubject(userInput);
+  };
 
   const callGenerateEndpoint = async () => {
     setIsGenerating(true);
@@ -18,7 +25,7 @@ const Home = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ userInput }),
+      body: JSON.stringify({ userQuestion, userInput }),
     });
 
     const data = await response.json();
@@ -30,48 +37,86 @@ const Home = () => {
   };
 
   const onUserChangedText = (event) => {
-    console.log(event.target.value);
     setUserInput(event.target.value);
   };
+
+  const onUserChangedQuestion = (event) => {
+    setUserQuestion(event.target.value);
+  };
+
   return (
     <div className="root">
       <div className="container">
         <div className="header">
           <div className="header-title">
-            <h1>Have a conversation with anyone.</h1>
+            <h1>Ask anyone, anything.</h1>
           </div>
+        </div>
+        <div className="prompt-container">
           <div className="header-subtitle">
             <h2>
               Enter the name of someone famous, or enter an artibitary name and
-              give them some characteristics.
+              give them some characteristics:
             </h2>
           </div>
-        </div>
-        {/* Add this code here*/}
-        <div className="prompt-container">
           <textarea
             className="prompt-box"
-            placeholder="start typing here"
+            placeholder="Elon Musk, Oprah Winfrey, Joe the angry neighbor..."
             value={userInput}
             onChange={onUserChangedText}
           />
-          {/* New code I added here */}
           <div className="prompt-buttons">
-            <a className="generate-button" onClick={callGenerateEndpoint}>
+            <a
+              className={
+                isGenerating ? "generate-button loading" : "generate-button"
+              }
+              onClick={beginConversation}
+            >
               <div className="generate">
-                <p>Generate</p>
+                {isGenerating ? (
+                  <span class="loader"></span>
+                ) : (
+                  <p>Ask a question</p>
+                )}
               </div>
             </a>
           </div>
-          {apiOutput && (
+
+          {
+            //TODO: Make this dynamically add a component, so that I can add more of the same components in future versions
+            conversationSubject != "" && (
+              <textarea
+                className="prompt-box"
+                placeholder="Ask a question..."
+                value={userQuestion}
+                onChange={onUserChangedQuestion}
+              />
+            )
+          }
+          {conversationSubject != "" && (
+            <div className="prompt-buttons">
+              <a
+                className={
+                  isGenerating ? "generate-button loading" : "generate-button"
+                }
+                onClick={callGenerateEndpoint}
+              >
+                <div className="generate">
+                  {isGenerating ? (
+                    <span class="loader"></span>
+                  ) : (
+                    <p>Get Answer</p>
+                  )}
+                </div>
+              </a>
+            </div>
+          )}
+          {apiOutput != "" && (
             <div className="output">
               <div className="output-header-container">
                 <div className="output-header">
-                  <h3>Output</h3>
+                  <h3>{apiOutput}</h3>
                 </div>
-              </div>
-              <div className="output-content">
-                <p>{apiOutput}</p>
               </div>
             </div>
           )}
